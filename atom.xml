@@ -4,7 +4,7 @@
   <title><![CDATA[Jong Won's Blog]]></title>
   <link href="http://jong-won.github.io/atom.xml" rel="self"/>
   <link href="http://jong-won.github.io/"/>
-  <updated>2016-02-10T22:58:46+08:00</updated>
+  <updated>2016-02-11T09:39:26+08:00</updated>
   <id>http://jong-won.github.io/</id>
   <author>
     <name><![CDATA[Jong Won]]></name>
@@ -12,5 +12,14 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[博客测试testing...]]></title>
+    <link href="http://jong-won.github.io/blog/2016/02/11/firstblog/"/>
+    <updated>2016-02-11T09:36:20+08:00</updated>
+    <id>http://jong-won.github.io/blog/2016/02/11/firstblog</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
   
 </feed>
