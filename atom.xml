@@ -4,7 +4,7 @@
   <title><![CDATA[Jong Won's Blog]]></title>
   <link href="http://jong-won.github.io/atom.xml" rel="self"/>
   <link href="http://jong-won.github.io/"/>
-  <updated>2016-02-11T11:00:31+08:00</updated>
+  <updated>2016-02-12T11:38:38+08:00</updated>
   <id>http://jong-won.github.io/</id>
   <author>
     <name><![CDATA[Jong Won]]></name>
@@ -14,22 +14,280 @@
 
   
   <entry>
+    <title type="html"><![CDATA[扯扯流形学习（一）	局部方法]]></title>
+    <link href="http://jong-won.github.io/blog/2016/02/11/mainfold/"/>
+    <updated>2016-02-11T20:09:45+08:00</updated>
+    <id>http://jong-won.github.io/blog/2016/02/11/mainfold</id>
+    <content type="html"><![CDATA[<pre><code>写这篇博客的直接动机是因为周一上课受打击了OMZ…我想静静 
+</code></pre>
+
+<blockquote>
+  <h2 id="section">感受下流形学习</h2>
+  <p><strong>先来看啥叫流形（manifold）？</strong></p>
+
+  <p><img src="http://jong-won.github.io/images/mainfold.png" /></p>
+
+  <p>举个例子，根据图B，数据集中的样本点分布在3维空间（称为观测特征），但是由图片可以看出他的分布比较有特点，用3个维度表示显然冗余。实际上我们可以说，它在一个流形空间（图A）内。在流形空间，可以用2个变量指定每个点，称为intrinsic feature，也就是说自由度为2。那么我们就可以这些点投射到2维空间内（图C）。</p>
+</blockquote>
+
+<h3 id="local">流形学习里面的局部（local）方法</h3>
+
+<p>所谓<strong>局部方法</strong>，就是从局部数据的图形特性来描述整个样本的分布
+介绍两种局部方法<strong>Locally Linear Embedding（LLE）局部线性嵌入</strong> 和 <strong>Laplacian Eigenmap（LE）拉普拉斯特征映射</strong></p>
+
+<hr />
+
+<h2 id="locally-linear-embeddinglle">Locally Linear Embedding（LLE）</h2>
+<p>先看Locally Linear Embedding（LLE）</p>
+
+<p><strong>算法思想</strong></p>
+
+<blockquote>
+  <p>这个方法的核心思想很简单。假如人类要移民火星，也就是说人类在火星上应该有个低维的映射，那么在火星上，你大娘应该还是你大娘，你大爷还是你大爷，你那谁家的小谁还是你那谁家的小谁。如果你大娘不是你从前的大娘，变成了你大爷，你大爷成了你大娘，就乱套了！</p>
+</blockquote>
+
+<p><strong>就是说，这里的invariance不变量是local geodesic properties，也就是局部样本点之间的关系或者说是邻域特性在学习前后不变（具体来讲，就是后文提到的权重向量）。</strong></p>
+
+<blockquote>
+  <p>出道智力测试：把人类送到火星分为几步？</p>
+
+  <p>如果你的答案是 一飞船点火，二太空旅行，三飞船降落，看到这个naïve的答案，我只能冲你微微一笑，恭喜你，你的智商已经达到了幼儿园大班水平。</p>
+
+</blockquote>
+
+<p><strong>言归正传，</strong>Locally Linear Embedding（可以理解为人类火星定居计划）应该分为2步。</p>
+
+<ol>
+  <li>
+    <p>写出在地球上面，每个人的关系网络。即每个人表示为其亲属的线性组合的权重。</p>
+  </li>
+  <li>
+    <p>保持关系网络不变，求解映射到火星的低维向量。</p>
+  </li>
+</ol>
+
+<p><strong>严格的表述是：</strong></p>
+
+<ol>
+  <li>
+    <p>对每个样本点 $x_i$ ，找出k邻近集 $N_i$ ,计算用  $N_i$ 重构 $x_i$ 的重构权重（重构系数），使得 $x_i$ 的重构误差最小。</p>
+  </li>
+  <li>
+    <p>计算低维向量，使得由重构权重表征的local geometry（局部几何特征）不变</p>
+  </li>
+</ol>
+
+<p><strong>下面讲每一步的细节：</strong></p>
+
+<ul>
+  <li>
+    <p><strong>第一步，局部线性拟合</strong></p>
+
+    <p><strong>转为优化问题</strong><br />
+  在流形的假设中，流形空间是由很多patch（小平面）构成拟合的，每个patch都是线性的欧几里德空间。所以对一个patch上面的某一点，可以写成其k邻近点的凸组合。即 ${x}^{ (i) } = \sum\limits_{j\in N_i} w_{ij} x^{(j)}$ , $\sum\limits_{j\in N_i} w_{ij}= 1$  。因此，对于流形空间上的点，我们需要求解如下带约束的优化问题：</p>
+
+    <blockquote>
+      <p>最小化目标函数 $E_i(w_i)=\left|\left| x^{(i)} - \sum\limits_{x^{(j)}\in N_i} w_{ij} x^{(j)} \right|\right| ^2$</p>
+
+      <p>约束条件 ： $ \sum\limits_{x_{(j)}\in N_i} w_{ij} =1^T w_i = 1$</p>
+
+      <p>$w_{ij} = 0 , for j \notin N_i$</p>
+    </blockquote>
+
+    <p><strong>优化求解</strong></p>
+
+    <p>可用拉格朗日乘子法求解这个问题。</p>
+
+    <p>先把目标函数化为如下矩阵形式：</p>
+
+    <p><img src="http://jong-won.github.io/images/mfl1.png" /></p>
+
+    <p>定义拉格朗日函数：<img src="http://jong-won.github.io/images/mfl2.png" />
+  令另两个自变量偏导数等于零，得到：<img src="http://jong-won.github.io/images/mfl3.png" /></p>
+  </li>
+  <li>
+    <p><strong>第二步，低维嵌入Low-dimensional Embedding</strong></p>
+
+    <p>现在我们已经得到了权重矩阵W，对低维向量y的求解，只需要解以下优化问题：</p>
+
+    <blockquote>
+      <p><script type="math/tex">min\ \  J(Y)=\sum\limits_{i=1}^N \left\| {y^{(i)} - \sum\limits_{j\in N_i} w_{ij} y_{(j)} }\right\| = \sum_{i=1}^N \|  Y^T b_i - Y^T w_i \| = Tr[Y^TMY]</script>
+$s.t. \sum\limits_{i=1}^N y^{(i)}=Y^T1=0 , \frac{1}{N}\sum\limits_i=1^N y^{(i)} {(y^{(i)})}^T = I$</p>
+
+      <p>*$M=(I-W)^T(I-W) \in \mathbb{R}^{N \times N}$ 是对称的半正定矩阵</p>
+    </blockquote>
+  </li>
+</ul>
+
+<p><strong>目标函数</strong>很好理解，意思是说让Y空间的点的邻域特征尽量和X空间点的邻域特征保持一致。</p>
+
+<p><strong>关于约束条件</strong>：那么如果我们求得一组映射后的低维向量Y，我们对它进行translation，rotation &amp; scaling（平移、旋转、放大缩小）得到的y仍然是优化问题的可行解。所以，我们应该对Y的平移、旋转、放大缩小特性进行限制。第一个限制，零均值，也就是中心化，限制了平移特性，无论Y的均值在哪，我们只考虑零均值的情况。第二个限制，协方差矩阵等于单位阵，限制了旋转、放大缩小（规模）的特性。</p>
+
+<ul>
+  <li>
+    <p><strong>So,这个优化问题如何解呢？</strong></p>
+
+    <p>先看<strong>结论</strong>，上面的优化问题的解就是 求解特征值问题 $My=\lambda y$ 得到的前p小的非零特征值的和。这里面，特征向量 $y \in \mathbb{R}^{N\times 1}$ 代表所有样本点映射后的某一维特征。</p>
+
+    <p><strong>解释</strong>：优化目标 $J(Y) = Tr[Y^TMY]$中的Y按照 $Y=[y_1,y_2,\cdots,y_p]$展开，把优化问题重写为：</p>
+
+    <blockquote>
+      <p>$\min \sum\limits_{k=1}^p y_k^T M y_k $</p>
+
+      <p>$s.t. y_k^T 1=0, \ \  y_k^Ty_k=N \ for \  k=1:p $</p>
+    </blockquote>
+
+    <p>把特征值公式 $My_k=\lambda_k y_k$ 代入目标函数，$min \sum\limits_{k=1}^p y_k^T My_k = \sum\limits_{k=1}^p y_k^T \lambda_k y_k = N \sum\limits_{k=1}^p \lambda_k$ ，神奇吧，所以就变成了求前p小的特征值问题。</p>
+  </li>
+</ul>
+
+<h3 id="locally-linear-embeddinglle-1">Locally Linear Embedding（LLE）的应用</h3>
+<p>提高分辨率（super-resolution）应用</p>
+
+<pre><code>相关的数据与标记：
+（n组）训练低分辨率图片——训练高分辨率图片
+（1组）测试低分辨率图片——估计的高分辨率图片
+</code></pre>
+
+<p>对于图片应用，我们一般都是以小方块（patch）为单位进行切分，每个小方块对应于之前LLE里面讲的一个sample data</p>
+
+<p><strong>那么我们期望我们对高分辨率图片估计的方法有什么要求呢？</strong></p>
+
+<ol>
+  <li>
+    <p>我们期望，测试低分辨率图片的每个小方块，和 多个training 低分辨率的小方块相关联，就是说，我们期望测试集里面的每个样本方块可以用 training 低分辨率的小方块的线性组合来表示。（就是之前提到的重构系数）（ps：就是先通过你大爷、你大娘、你谁家的小谁确定到你）</p>
+  </li>
+  <li>
+    <p>在低分辨率的局部特性在映射到高分辨率后应该保留（就是映射前后需要满足：你大爷还是你大爷，你大娘还是你大娘）</p>
+  </li>
+  <li>
+    <p>对于估计的高分辨率的图片中相邻的每个小方块应该满足：局部相容和平滑（local compatibility &amp; smoothness），很好理解，映射后的邻接小方块之间不应该有太大差异。</p>
+  </li>
+</ol>
+
+<p><strong>具体的方法：</strong></p>
+
+<ol>
+  <li>
+    <p>对测试图片中的每个小方块，计算其映射后的高分辨率小方块（patch），实质上进进行样本点映射（对应与LLE中降维那步）。对每个patch，计算方法如下：</p>
+
+    <ul>
+      <li>在训练低分辨率图片的patch中，找到和该patch相似的k个patches构成k邻近集合</li>
+      <li>计算重构权重，使得由k邻近集重构该patch的误差最小</li>
+      <li>由 k邻近集中patch对应的高分辨率patch  和  上步得到的权重系数  构造  对应的高分辨率patch（根据映射前后局部特性不变的假设，在高分辨率空间内，该patch和k邻近集之间的关系也由上步求得的权重系数确定）</li>
+    </ul>
+  </li>
+  <li>
+    <p>构建目标高分辨率图片：使图片在局部满足相容和平滑（compatibility &amp; smoothness）约束（即相邻的patch之间）</p>
+  </li>
+</ol>
+
+<h2 id="laplacian-eigenmaple">Laplacian Eigenmap（LE）拉普拉斯特征映射</h2>
+<p>首先构建了一个带权的图，若两点之间的相似度越大（距离越小）其权值越大。这个图的邻接矩阵W可能是稀疏的，因为有些点之间八竿子打不着，所以值为0.</p>
+
+<p><strong>先来讨论把 $X\in\mathbb{R}^{n\times1}$ 空间映射到 $Y\in\mathbb{R}^{1\times1}$ 空间的情况，即降为1维</strong>
+对每个联通的子图，分别求映射Y，即<strong>求解如下优化问题</strong>：</p>
+
+<blockquote>
+  <p>$\min \frac{1}{2} \sum\limits_{i,j=1}^N \left( y^{(i)}-y^{(i)} \right)^2 w^{ij}=\sum\limits_{i=1}^N \left( y^{(i)} \right)^2 w^{ij} - \frac{1}{2} \sum_{i,j=1}^N  y^{(i)}y^{(i)} w^{ij}=y^T(D-W)y=y^TLy$</p>
+
+  <p>$s.t. \ \  y^TDy=1,y^TD1=0$</p>
+
+  <p>*$d_{ii}=\sum_j w_{ij},D=diag([d_{11},[d_{22},\cdots,[d_{NN}])$</p>
+
+  <p>*$L=D-W$ graph Laplacian $y=\left( y^{(1)},\cdots,y^{(N)}\right)$</p>
+</blockquote>
+
+<ul>
+  <li>
+    <p><strong>优化目标</strong>很好理解，忽略前面的系数，就是让在原来空间紧密的点映射后仍然紧密，原来八竿子打不着的点映射后仍然不打着；同时对于原空间内关系紧密的两个点，其权重高，优化时越重要。</p>
+  </li>
+  <li>
+    <p><strong>约束1：</strong> $y^TDy=\left( y^{(1)}\right)^2 d_{11} + \left( y^{(2)}\right)^2 d_{22} + \cdots + \left( y^{(N)}\right)^2 d_{NN}=1$ 是为了消除放大缩小y的影响（即Scale Invariance）。如果我们不加该约束，注意到，若我们求解出y，我们对y进行任意缩放，它仍然是可行解。</p>
+  </li>
+  <li>
+    <p><strong>约束2：</strong> 是为了排除解消 的解，显然，映射后所有值有一样，并不是我们想要的结果啊。至于为什么 是以上优化的可行解，后面会说。</p>
+  </li>
+</ul>
+
+<p><strong>那么，怎么求解这个优化问题呢？</strong></p>
+
+<p>答案是用特征值和特征向量。</p>
+
+<blockquote>
+  <p>可通过求解：<script type="math/tex">(D^{-1}L)y=\lambda y i.e. Ly=\lambda Dy</script>
+目标函数 $y^TLy=y^T \lambda Dy = \lambda$ ，所以就是要找最小的特征值和最小特征值对应的特征向量。等等，有个问题，我们发现 $\lambda=0,y=c1,c\neq 0$ 也是求解特征值问题的一组可行解，这显然不是我们想要的结果。所以我们加了第2个约束条件。所以这个优化问题的求解变成了求解最小的非零特征值和其对应的特征向量。</p>
+</blockquote>
+
+<p><strong>等等…. Why $\lambda =0,y=c1,c \neq 0$ 是特征值问题的解？</strong> $cL1=cD1-cW1=0$</p>
+
+<p>除放大缩小y的影响（即Scale Invariance）。如果我们不加该约束，注意到，若我们求解出y，我们对y进行任意缩放，它仍然是可行解。</p>
+
+<p><strong>现在考虑把 $X \in \mathbb{R}^{n\times1}$ 空间映射到 $Y \in \mathbb{R}^{p\times1}$ 空间的情况，即降为p维</strong></p>
+
+<blockquote>
+  <p>目标函数和之前一样： $\min\limits_Y \sum\limits_{i,j=1}^N \left( y^{(i)}-y^{(j)}\right)^2 w_{ij}=Tr(y^TLy)$</p>
+
+  <p>约束条件也差不多： $y^TDy=I,y^TD1=0$</p>
+
+  <p>这个优化问题的求解在LLE里面说过，就是求前p小的非零特征值和相应特征向量。</p>
+</blockquote>
+
+<h2 id="locality-preserving-projectionlpp">Locality Preserving Projection（LPP）局部保留投影</h2>
+<blockquote>
+  <p>算法:</p>
+
+  <p>1、构建带全的图，其邻接矩阵为W（同LE）</p>
+
+  <p>2、求解特征值问题 $XLX^Tv=\lambda XDX^T$</p>
+
+  <p>*$d_{ii}=\sum_j w_{ij},D=diag([d_{11},d_{22},\cdots,d_{NN}]),L=D-W$ is praph Laplacian</p>
+
+  <p>3、求 $y=V^Tx$ ，其中 $v=[v_1,v_2,\cdots,v_N]$ 是前p小特征值对应的特征向量</p>
+</blockquote>
+
+<p><img src="http://jong-won.github.io/images/lpp.png" /></p>
+
+<p>由目标函数可以看出，LPP是非线性的LE的线性近似。
+注意特征向量的涵义，LE中特征向量就是映射后的y了，而LPP特征向量是变换向量（用来做变换的）。</p>
+
+<p><strong>总结一下</strong></p>
+
+<ul>
+  <li>LEE和LE都是局部的流形学习算法</li>
+  <li>LEE基于的假设是，流形在局部可以用欧式空间拟合（满足线性），映射前后线性关系的权重不变。</li>
+  <li>LE基于的假设是，在原空间紧密的点在投射空间仍然紧密</li>
+</ul>
+
+<hr />
+
+<p>Reference：</p>
+
+<ol>
+  <li>
+    <p>中国科学院研究生课程《模式识别与机器学习》流形学习部分，常虹</p>
+  </li>
+  <li>
+    <p><a href="http://blog.csdn.net/to_xidianhph_youth/article/details/10134805" title="博客文章：基于邻域嵌入的超分辨率重建">博客文章：基于邻域嵌入的超分辨率重建</a></p>
+  </li>
+</ol>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[博客测试testing...]]></title>
     <link href="http://jong-won.github.io/blog/2016/02/11/firstblog/"/>
     <updated>2016-02-11T09:36:20+08:00</updated>
     <id>http://jong-won.github.io/blog/2016/02/11/firstblog</id>
-    <content type="html"><![CDATA[<h1>扯扯流形学习（一）   局部方法</h1>
+    <content type="html"><![CDATA[<script type="math/tex; mode=display">% &lt;![CDATA[
+\begin{align}
+\mbox{Union: } & A\cup B = \{x\mid x\in A \mbox{ or } x\in B\} \\
+\mbox{Concatenation: } & A\circ B  = \{xy\mid x\in A \mbox{ and } y\in B\} \\
+\mbox{Star: } & A^\star  = \{x_1x_2\ldots x_k \mid  k\geq 0 \mbox{ and each } x_i\in A\} \\
+\end{align} %]]&gt;</script>
 
-<pre><code>写这篇博客的直接动机是因为周一上课受打击了OMZ…我想静静 
-</code></pre>
-
-<h2>感受下流形学习</h2>
-
-<p><strong>先来看啥叫流形（manifold）？</strong></p>
-
-<p><img src="http://jong-won.github.io/images/pic_name.png"></p>
-
-<p>举个例子，根据图B，数据集中的样本点分布在3维空间（称为观测特征），但是由图片可以看出他的分布比较有特点，用3个维度表示显然冗余。实际上我们可以说，它在一个流形空间（图A）内。在流形空间，可以用2个变量指定每个点，称为intrinsic feature，也就是说自由度为2。那么我们就可以这些点投射到2维空间内（图C）。</p>
+<p>If $a^2=b$ and $b=2$, then the solution must be
+either $a=+\sqrt{2}$ or $a=-\sqrt{2}$.</p>
 ]]></content>
   </entry>
   
