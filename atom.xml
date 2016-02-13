@@ -4,7 +4,7 @@
   <title><![CDATA[Jong Won's Blog]]></title>
   <link href="http://jong-won.github.io/atom.xml" rel="self"/>
   <link href="http://jong-won.github.io/"/>
-  <updated>2016-02-12T11:38:38+08:00</updated>
+  <updated>2016-02-13T23:15:32+08:00</updated>
   <id>http://jong-won.github.io/</id>
   <author>
     <name><![CDATA[Jong Won]]></name>
@@ -285,6 +285,8 @@ $s.t. \sum\limits_{i=1}^N y^{(i)}=Y^T1=0 , \frac{1}{N}\sum\limits_i=1^N y^{(i)} 
 \mbox{Concatenation: } & A\circ B  = \{xy\mid x\in A \mbox{ and } y\in B\} \\
 \mbox{Star: } & A^\star  = \{x_1x_2\ldots x_k \mid  k\geq 0 \mbox{ and each } x_i\in A\} \\
 \end{align} %]]&gt;</script>
+
+<p><img src="http://jong-won.github.io/images/test.png" /></p>
 
 <p>If $a^2=b$ and $b=2$, then the solution must be
 either $a=+\sqrt{2}$ or $a=-\sqrt{2}$.</p>
